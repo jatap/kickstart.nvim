@@ -519,7 +519,7 @@ require('lazy').setup({
         },
       }
 
-      -- vim.cmd.colorscheme 'modus'
+      vim.cmd.colorscheme 'modus'
     end,
   },
   {
@@ -528,7 +528,7 @@ require('lazy').setup({
     priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
       -- require("koda").setup({ transparent = true })
-      vim.cmd 'colorscheme koda'
+      -- vim.cmd 'colorscheme koda'
     end,
   },
 
