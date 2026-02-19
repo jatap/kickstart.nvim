@@ -519,7 +519,7 @@ require('lazy').setup({
         },
       }
 
-      -- vim.cmd.colorscheme 'modus'
+      vim.cmd.colorscheme 'modus'
     end,
   },
   {
@@ -561,7 +561,7 @@ require('lazy').setup({
         transparent_mode = false,
       }
 
-      vim.cmd 'colorscheme gruvbox'
+      -- vim.cmd 'colorscheme gruvbox'
     end,
   },
 
