@@ -23,6 +23,8 @@ If you are experiencing issues, please make sure you have the latest versions.
 
 External Requirements:
 - Basic utils: `git`, `make`, `unzip`, C Compiler (`gcc`)
+- [Node.js provider](https://neovim.io/doc/user/provider.html#provider-nodejs): `npm install -g neovim`
+- [Python provider](https://neovim.io/doc/user/provider.html#provider-python): `uv tool install --upgrade pynvim`
 - [tree-sitter CLI](https://tree-sitter.github.io/tree-sitter/cli/) (version 0.26.1 or newer), `tar`, and `curl`
 - [ripgrep](https://github.com/BurntSushi/ripgrep#installation),
   [fd-find](https://github.com/sharkdp/fd#installation)

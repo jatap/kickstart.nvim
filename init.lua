@@ -84,6 +84,17 @@ I hope you enjoy your Neovim journey,
 P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
+-- Resolve provider hosts when available so discovery is deterministic but optional.
+local node_host_prog = vim.fn.exepath 'neovim-node-host'
+if node_host_prog ~= '' then
+  vim.g.node_host_prog = node_host_prog
+end
+
+local python3_host_prog = vim.fn.exepath 'pynvim-python'
+if python3_host_prog ~= '' then
+  vim.g.python3_host_prog = python3_host_prog
+end
+
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
