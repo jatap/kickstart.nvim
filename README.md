@@ -126,8 +126,9 @@ fallback.
 
 `mini.clue` opens a delayed popup after a configured prefix such as `<Space>`,
 `g`, `z`, `[`, `]`, or `<C-w>`. It uses descriptions from existing mappings,
-so the popup stays aligned with this config's `desc` metadata, and adds
-built-in clues for common Vim key families.
+so the popup stays aligned with this config's `desc` metadata, expands its
+width automatically to fit its content, and adds built-in clues for common Vim
+key families.
 
 ## Updating packages
 

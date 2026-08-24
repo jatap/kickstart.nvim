@@ -254,6 +254,7 @@ end
 local ok_miniclue, miniclue = pcall(require, "mini.clue")
 if ok_miniclue then
 	miniclue.setup({
+		window = { config = { width = "auto" } },
 		triggers = {
 			-- Leader mappings
 			{ mode = { "n", "x" }, keys = "<Leader>" },
