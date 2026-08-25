@@ -1,11 +1,9 @@
--- Minimal Neovim configuration: core settings, keymaps, and the packages of
--- choice (Modus theme, fzf-lua, mini.nvim). No plugin manager; packages are
--- native packs in ~/.local/share/nvim/site/pack/*/start/ and load automatically:
+-- Minimal Neovim configuration: core settings plus Modus and mini.nvim.
+-- There is no plugin manager; native packages in
+-- ~/.local/share/nvim/site/pack/*/start/ load automatically:
 --
 --   git clone https://github.com/miikanissi/modus-themes.nvim \
 --     ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim
---   git clone https://github.com/ibhagwan/fzf-lua \
---     ~/.local/share/nvim/site/pack/theme/start/fzf-lua
 --   git clone --branch stable https://github.com/nvim-mini/mini.nvim \
 --     ~/.local/share/nvim/site/pack/ui/start/mini.nvim
 
@@ -24,6 +22,22 @@ end
 -- See `:help mapleader`
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
+
+-- mini.basics owns common defaults and autocommands. Its j/k, Ctrl-hjkl, and
+-- Alt-hjkl presets stay disabled so this config can favor arrow and page keys.
+local ok_minibasics, minibasics = pcall(require, "mini.basics")
+if ok_minibasics then
+	minibasics.setup({
+		options = { basic = true, extra_ui = false, win_borders = "auto" },
+		mappings = {
+			basic = false,
+			option_toggle_prefix = "<leader>t",
+			windows = false,
+			move_with_alt = false,
+		},
+		autocommands = { basic = true, relnum_in_visual_mode = false },
+	})
+end
 
 -- [[ Options ]]
 -- See `:help option-list`
@@ -55,9 +69,6 @@ vim.o.smartindent = true
 -- Keep cursor context when scrolling / jumping
 vim.o.scrolloff = 8
 
--- Smooth wheel scrolling (mouse is enabled)
-vim.o.smoothscroll = true
-
 -- Keep the view stable when splitting
 vim.o.splitkeep = "screen"
 
@@ -69,7 +80,7 @@ vim.o.path = vim.o.path .. "**"
 vim.opt.wildignore:append({ "*/node_modules/*", "*/target/*", "*/.git/*" })
 
 -- Hide '~' filler below the end of the buffer
-vim.opt.fillchars = { eob = " " }
+vim.opt.fillchars:append({ eob = " " })
 
 -- Formatting: numbered lists re-indent on <CR> (also used by gq)
 vim.opt.formatoptions:append("n")
@@ -105,36 +116,20 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>") -- clear search highlight
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
--- Split navigation with CTRL+<hjkl>
-vim.keymap.set("n", "<C-Left>", "<C-w><C-h>", { desc = "Move focus to the left window" })
-vim.keymap.set("n", "<C-Right>", "<C-w><C-l>", { desc = "Move focus to the right window" })
-vim.keymap.set("n", "<C-Down>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
-vim.keymap.set("n", "<C-Up>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
+-- Arrow-first movement and split navigation
+vim.keymap.set({ "n", "x" }, "<PageDown>", "<C-d>zz", { desc = "Scroll half-page down and center" })
+vim.keymap.set({ "n", "x" }, "<PageUp>", "<C-u>zz", { desc = "Scroll half-page up and center" })
+vim.keymap.set("n", "<C-Left>", "<C-w><Left>", { desc = "Move focus to the left window" })
+vim.keymap.set("n", "<C-Right>", "<C-w><Right>", { desc = "Move focus to the right window" })
+vim.keymap.set("n", "<C-Down>", "<C-w><Down>", { desc = "Move focus to the lower window" })
+vim.keymap.set("n", "<C-Up>", "<C-w><Up>", { desc = "Move focus to the upper window" })
 
 -- [[ Diagnostics ]]
 -- Rounded float border and previous/next navigation (feeds from LSP, :make, ...)
 vim.diagnostic.config({ float = { border = "rounded" }, signs = true })
 
--- [[ Native file browser (netrw) ]]
-vim.g.netrw_banner = 0 -- no banner header
-vim.g.netrw_liststyle = 3 -- tree view
-vim.keymap.set("n", "<leader>e", vim.cmd.Explore, { desc = "File browser [E]xplore" })
-
 -- [[ Autocommands ]]
 -- See `:help lua-guide-autocommands`
-
--- Highlight when yanking (copying) text
-vim.api.nvim_create_autocmd("TextYankPost", {
-	desc = "Highlight when yanking (copying) text",
-	group = vim.api.nvim_create_augroup("highlight-yank", { clear = true }),
-	callback = function()
-		if vim.hl.hl_op then
-			vim.hl.hl_op()
-		else
-			vim.hl.on_yank()
-		end
-	end,
-})
 
 -- Open the quickfix window automatically after :grep / :make
 vim.api.nvim_create_autocmd("QuickFixCmdPost", {
@@ -184,6 +179,40 @@ if ok then
 		styles = {
 			functions = { italic = true }, -- Enable italics for functions
 		},
+		-- Keep every mini.nvim highlight on the Modus palette: this hook runs
+		-- after the theme is assembled, with the exact colors of the active
+		-- style (light/dark), and re-runs on every colorscheme load — so the
+		-- overrides below always use the current theme colors.
+		on_highlights = function(h, c)
+			-- Neovim renders every floating window's backdrop through 'NormalFloat'
+			-- (a float's 'Normal' defaults to it), and several mini modules link
+			-- their popup groups to it — e.g. MiniClueDescSingle. Pointing it at the
+			-- main background makes ALL popups blend with the editor (pure black on
+			-- the dark theme, white on the light one) instead of Modus' grey
+			-- bg_active. The module-specific overrides below keep each surface
+			-- black even if a module stops linking to NormalFloat.
+			h.NormalFloat = { fg = c.fg_main, bg = c.bg_main }
+			h.MiniPickNormal = { fg = c.fg_main, bg = c.bg_main }
+			h.MiniFilesNormal = { fg = c.fg_main, bg = c.bg_main }
+			h.MiniCmdlinePeekNormal = { fg = c.fg_main, bg = c.bg_main }
+			h.MiniClueDescSingle = { fg = c.fg_main, bg = c.bg_main } -- clue rows & body
+
+			-- Completion / command-line popup menu: same theme background, with a
+			-- fully inverted, high-contrast selected item.
+			h.Pmenu = { fg = c.fg_main, bg = c.bg_main }
+			h.PmenuSel = { fg = c.bg_main, bg = c.fg_main }
+
+			-- mini.cursorword: replace the dim gray chip (bg = fg_dim) with a
+			-- clearly visible, theme-derived fg+bg. Text on the subtle
+			-- backgrounds keeps strong contrast on both Modus styles.
+			h.MiniCursorword = { fg = c.fg_main, bg = c.bg_cyan_subtle }
+			h.MiniCursorwordCurrent = { fg = c.fg_main, bg = c.bg_blue_subtle }
+
+			-- mini.pick: fuzzy-matched characters reuse the search highlight
+			-- (hint-colored by default is too subtle). Modus itself links picker
+			-- matches to CurSearch, e.g. SnacksPickerMatch.
+			h.MiniPickMatchRanges = { link = "CurSearch" }
+		end,
 	})
 
 	vim.cmd.colorscheme("modus")
@@ -224,28 +253,126 @@ else
 	)
 end
 
--- [[ Fuzzy finder: fzf-lua ]]
--- Uses the fzf binary already installed on the system (no extra deps).
-local ok_fzf, fzf = pcall(require, "fzf-lua")
-if ok_fzf then
-	-- Let Neovim's vim.ui.select (LSP pickers, etc.) use fzf-lua too.
-	fzf.setup({ ui_select = {} })
+-- [[ mini.nvim workflows ]]
+-- All modules come from the single mini.nvim native package. If it is absent,
+-- warn once rather than failing startup halfway through configuration.
+local ok_mini, miniicons = pcall(require, "mini.icons")
+if ok_mini then
+	miniicons.setup()
+	miniicons.tweak_lsp_kind()
 
-	vim.keymap.set("n", "<leader>sf", fzf.files, { desc = "[S]earch [F]iles" })
-	vim.keymap.set("n", "<leader>sg", fzf.live_grep, { desc = "[S]earch by [G]rep" })
-	vim.keymap.set("n", "<leader>sw", fzf.grep_cword, { desc = "[S]earch current [W]ord" })
-	vim.keymap.set("v", "<leader>sw", fzf.grep_visual, { desc = "[S]earch [W]ord (visual)" })
-	vim.keymap.set("n", "<leader>ss", fzf.builtin, { desc = "[S]earch [S]elect picker" })
-	vim.keymap.set("n", "<leader>sd", fzf.diagnostics_document, { desc = "[S]earch [D]iagnostics" })
-	vim.keymap.set("n", "<leader>sr", fzf.resume, { desc = "[S]earch [R]esume" })
-	vim.keymap.set("n", "<leader>s.", fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-	vim.keymap.set("n", "<leader><leader>", fzf.buffers, { desc = "[ ] Find existing buffers" })
-	vim.keymap.set("n", "<leader>sh", fzf.helptags, { desc = "[S]earch [H]elp" })
-	vim.keymap.set("n", "<leader>sk", fzf.keymaps, { desc = "[S]earch [K]eymaps" })
+	require("mini.ai").setup({ n_lines = 100 })
+	require("mini.comment").setup()
+	require("mini.completion").setup({
+		mappings = { scroll_down = "<PageDown>", scroll_up = "<PageUp>" },
+	})
+	require("mini.operators").setup({ replace = { prefix = "gR" } })
+	require("mini.pairs").setup()
+	require("mini.splitjoin").setup()
+	require("mini.surround").setup()
+
+	-- mini.indentscope owns [i/]i, so mini.bracketed's indent target is disabled.
+	require("mini.bracketed").setup({ indent = { suffix = "" } })
+	require("mini.bufremove").setup()
+	require("mini.cmdline").setup()
+	require("mini.diff").setup({
+		mappings = { goto_first = "[G", goto_prev = "[g", goto_next = "]g", goto_last = "]G" },
+	})
+	require("mini.files").setup({
+		mappings = {
+			go_in = "<Right>",
+			go_in_plus = "<S-Right>",
+			go_out = "<Left>",
+			go_out_plus = "<S-Left>",
+		},
+		options = { permanent_delete = false, use_as_default_explorer = true },
+		windows = { preview = true, width_focus = 40, width_preview = 40 },
+	})
+	require("mini.git").setup()
+	require("mini.jump").setup()
+	require("mini.jump2d").setup({
+		labels = "abcdefgimnopqrstuvwxyz",
+		mappings = { start_jumping = "<leader>j" },
+	})
+
+	local minipick = require("mini.pick")
+	minipick.setup({
+		mappings = {
+			move_down = "<Down>",
+			move_up = "<Up>",
+			scroll_down = "<PageDown>",
+			scroll_up = "<PageUp>",
+			scroll_left = "<S-Left>",
+			scroll_right = "<S-Right>",
+		},
+		options = { use_cache = true },
+		window = { config = { border = "rounded" } },
+	})
+
+	-- mini.extra is bundled with mini.nvim and supplies feature-parity pickers.
+	local miniextra = require("mini.extra")
+	miniextra.setup()
+
+	require("mini.animate").setup()
+	require("mini.cursorword").setup()
+	require("mini.indentscope").setup()
+	require("mini.statusline").setup({ use_icons = true })
+
+	-- Explorer and buffer lifecycle
+	vim.keymap.set("n", "<leader>e", function()
+		if not MiniFiles.close() then
+			MiniFiles.open(vim.api.nvim_buf_get_name(0))
+		end
+	end, { desc = "Toggle file [E]xplorer at current file" })
+	vim.keymap.set("n", "<leader>E", function()
+		if not MiniFiles.close() then
+			MiniFiles.open(nil, false)
+		end
+	end, { desc = "Toggle file explorer at working directory" })
+	vim.keymap.set("n", "<leader>bd", function()
+		MiniBufremove.delete(0, false)
+	end, { desc = "[B]uffer [D]elete without closing layout" })
+	vim.keymap.set("n", "<leader>bw", function()
+		MiniBufremove.wipeout(0, false)
+	end, { desc = "[B]uffer [W]ipeout without closing layout" })
+
+	-- Search and selection (mini.pick replaces fzf-lua)
+	vim.keymap.set("n", "<leader>sf", MiniPick.builtin.files, { desc = "[S]earch [F]iles" })
+	vim.keymap.set("n", "<leader>sg", MiniPick.builtin.grep_live, { desc = "[S]earch by live [G]rep" })
+	vim.keymap.set("n", "<leader>sw", function()
+		MiniPick.builtin.grep({ pattern = vim.fn.expand("<cword>"), method = "plain" })
+	end, { desc = "[S]earch current [W]ord" })
+	vim.keymap.set("n", "<leader>ss", function()
+		local names = vim.tbl_keys(MiniPick.registry)
+		table.sort(names)
+		local name = MiniPick.start({ source = { items = names, name = "Pickers", choose = function() end } })
+		if name then
+			MiniPick.registry[name]()
+		end
+	end, { desc = "[S]earch [S]elect picker" })
+	vim.keymap.set("n", "<leader>sd", function()
+		MiniExtra.pickers.diagnostic({ scope = "current" })
+	end, { desc = "[S]earch [D]iagnostics in buffer" })
+	vim.keymap.set("n", "<leader>sr", MiniPick.builtin.resume, { desc = "[S]earch [R]esume" })
+	vim.keymap.set("n", "<leader>s.", MiniExtra.pickers.oldfiles, { desc = "[S]earch recent files" })
+	vim.keymap.set("n", "<leader><leader>", MiniPick.builtin.buffers, { desc = "Find existing buffers" })
+	vim.keymap.set("n", "<leader>sh", MiniPick.builtin.help, { desc = "[S]earch [H]elp" })
+	vim.keymap.set("n", "<leader>sk", MiniExtra.pickers.keymaps, { desc = "[S]earch [K]eymaps" })
 	vim.keymap.set("n", "<leader>sn", function()
-		fzf.files({ cwd = vim.fn.stdpath("config") })
+		MiniPick.builtin.files(nil, { source = { cwd = vim.fn.stdpath("config") } })
 	end, { desc = "[S]earch [N]eovim files" })
-	vim.keymap.set("n", "<leader>/", fzf.blines, { desc = "[/] Fuzzily search in current buffer" })
+	vim.keymap.set("n", "<leader>/", function()
+		MiniExtra.pickers.buf_lines({ scope = "current" })
+	end, { desc = "Search lines in current buffer" })
+
+	-- Git inspection; editing hunks uses mini.diff's gh/gH operators.
+	vim.keymap.set("n", "<leader>gs", MiniGit.show_at_cursor, { desc = "[G]it [S]how at cursor" })
+	vim.keymap.set("n", "<leader>gh", MiniExtra.pickers.git_hunks, { desc = "[G]it [H]unks" })
+else
+	vim.notify(
+		"mini.nvim not found. Install it with:\n  git clone --branch stable https://github.com/nvim-mini/mini.nvim ~/.local/share/nvim/site/pack/ui/start/mini.nvim",
+		vim.log.levels.WARN
+	)
 end
 
 -- [[ Key clues: mini.clue ]]
@@ -283,11 +410,6 @@ if ok_miniclue then
 			miniclue.gen_clues.z(),
 		},
 	})
-else
-	vim.notify(
-		"mini.nvim (mini.clue) not found. Install it with:\n  git clone --branch stable https://github.com/nvim-mini/mini.nvim ~/.local/share/nvim/site/pack/ui/start/mini.nvim",
-		vim.log.levels.WARN
-	)
 end
 
 -- vim: ts=2 sts=2 sw=2 et
