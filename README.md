@@ -101,7 +101,9 @@ Leader is `<Space>`.
 | `<leader>j`                | Start a mini.jump2d jump                                    |
 | `<leader>gs`               | Show Git data for the item under the cursor                 |
 | `<leader>gh`               | Pick a Git hunk                                             |
-| `<leader>q`                | Put current-buffer diagnostics in the location list         |
+| `<leader>w`                | Write the current file                                      |
+| `<leader>q`                | Quit Neovim (prompts if there are unsaved changes)          |
+| `<leader>dq`               | Put current-buffer diagnostics in the location list         |
 | `<Esc><Esc>` in a terminal | Return to Normal mode                                       |
 
 ### mini.pick
@@ -453,6 +455,22 @@ require("mini.files").setup({
   },
   windows = { preview = true, width_focus = 40, width_preview = 40 },
 })
+
+-- <CR> opens the entry under the cursor and closes the explorer after a file
+-- is opened, matching go_in_plus; created per explorer buffer via mini.files'
+-- documented User event.
+vim.api.nvim_create_autocmd("User", {
+  group = vim.api.nvim_create_augroup("mini-files-cr", { clear = true }),
+  pattern = "MiniFilesBufferCreate",
+  callback = function(args)
+    vim.keymap.set("n", "<CR>", function()
+      MiniFiles.go_in({ close_on_file = true })
+    end, {
+      buffer = args.data.buf_id,
+      desc = "Open file or directory and close explorer",
+    })
+  end,
+})
 ```
 
 **How to use**
@@ -460,7 +478,7 @@ require("mini.files").setup({
 - `<leader>e` toggles the explorer at the current file; `<leader>E` opens a
   fresh one at the working directory.
 - `:Explore` (and opening a directory with `:edit`) now routes to mini.files.
-- Navigate with the arrows above; the preview pane updates as you move.
+- Navigate with the arrows above (`<Right>` enters a directory / opens a file, `<S-Right>` does the same and closes the explorer, `<Left>` goes to the parent directory, `<S-Left>` also trims the child branch). `<CR>` opens the entry under the cursor and closes the explorer after opening a file. The preview pane updates as you move.
 - Directory and file names are editable text: change them and press `=` to
   review and apply the filesystem changes. Deleted entries land in the trash
   (`permanent_delete = false`) rather than being removed for good.
