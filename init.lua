@@ -113,7 +113,9 @@ end)
 -- See `:help vim.keymap.set()`
 
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>") -- clear search highlight
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
+vim.keymap.set("n", "<leader>w", "<cmd>write<CR>", { desc = "[W]rite current file" })
+vim.keymap.set("n", "<leader>q", "<cmd>quit<CR>", { desc = "[Q]uit Neovim" })
+vim.keymap.set("n", "<leader>dq", vim.diagnostic.setloclist, { desc = "[D]iagnostics to location list" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Arrow-first movement and split navigation
@@ -287,6 +289,22 @@ if ok_mini then
 		},
 		options = { permanent_delete = false, use_as_default_explorer = true },
 		windows = { preview = true, width_focus = 40, width_preview = 40 },
+	})
+
+	-- <CR> opens the entry under the cursor and closes the explorer after a
+	-- file is opened, matching <S-Right>. Set buffer-locally (per explorer
+	-- buffer) so the arrow mappings keep working unchanged everywhere else.
+	vim.api.nvim_create_autocmd("User", {
+		group = vim.api.nvim_create_augroup("mini-files-cr", { clear = true }),
+		pattern = "MiniFilesBufferCreate",
+		callback = function(args)
+			vim.keymap.set("n", "<CR>", function()
+				MiniFiles.go_in({ close_on_file = true })
+			end, {
+				buffer = args.data.buf_id,
+				desc = "Open file or directory and close explorer",
+			})
+		end,
 	})
 	require("mini.git").setup()
 	require("mini.jump").setup()
