@@ -23,6 +23,24 @@ end
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- [[ Borders ]]
+-- One border style for every overlay, set through Neovim's own options:
+--   'winborder' - default for floating windows that do not pick a border of
+--                 their own (mini.nvim modules, LSP hover and signature help,
+--                 vim.ui.select menus such as code actions).
+--   'pumborder' - the completion and command-line candidate menus, which are
+--                 drawn by the popup menu and are not floating windows, so
+--                 'winborder' does not reach them.
+-- mini.basics' options.win_borders = 'auto' reads 'winborder' during setup to
+-- pick matching fillchars for split windows, so this has to come first.
+-- "single" = square corners (┌ ┐ └ ┘). Other values: "rounded", "double",
+-- "bold", "solid", "shadow", "none", or 8 custom characters.
+-- Ordinary (non-floating) windows have no border slot at all: their frame is
+-- the 'fillchars' separator line, colored by 'WinSeparator' (matched to
+-- FloatBorder in the theme hook below), and dim_inactive marks the active one.
+vim.o.winborder = "single"
+vim.o.pumborder = "single"
+
 -- mini.basics owns common defaults and autocommands. Its j/k, Ctrl-hjkl, and
 -- Alt-hjkl presets stay disabled so this config can favor arrow and page keys.
 local ok_minibasics, minibasics = pcall(require, "mini.basics")
@@ -114,7 +132,7 @@ end)
 
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>") -- clear search highlight
 vim.keymap.set("n", "<leader>w", "<cmd>write<CR>", { desc = "[W]rite current file" })
-vim.keymap.set("n", "<leader>q", "<cmd>quit<CR>", { desc = "[Q]uit Neovim" })
+vim.keymap.set("n", "<leader>q", "<cmd>qa<CR>", { desc = "[Q]uit Neovim" })
 vim.keymap.set("n", "<leader>dq", vim.diagnostic.setloclist, { desc = "[D]iagnostics to location list" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
@@ -126,9 +144,18 @@ vim.keymap.set("n", "<C-Right>", "<C-w><Right>", { desc = "Move focus to the rig
 vim.keymap.set("n", "<C-Down>", "<C-w><Down>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-Up>", "<C-w><Up>", { desc = "Move focus to the upper window" })
 
+-- Window cycling. `<C-W>w` visits every window in the tab, including the
+-- quickfix/location list and floating windows, so it reaches buffers that the
+-- directional maps above cannot. Normal mode only: insert-mode `<C-X>`
+-- completion and `:terminal` input are untouched. `<C-X>` is also Vim's
+-- decrement-number operator, so a lone `<C-X>` now waits `timeoutlen` (300 ms
+-- in this config) for a possible second key.
+vim.keymap.set("n", "<C-X>o", "<C-W>w", { desc = "Next window (incl. quickfix)" })
+vim.keymap.set("n", "<C-X>O", "<C-W>W", { desc = "Previous window (incl. quickfix)" })
+
 -- [[ Diagnostics ]]
--- Rounded float border and previous/next navigation (feeds from LSP, :make, ...)
-vim.diagnostic.config({ float = { border = "rounded" }, signs = true })
+-- Borders come from 'winborder' (see above); navigation feeds from LSP, :make, ...
+vim.diagnostic.config({ signs = true })
 
 -- [[ Autocommands ]]
 -- See `:help lua-guide-autocommands`
@@ -170,6 +197,46 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- [[ LSP ]]
+-- Native LSP client (vim.lsp.enable, Neovim 0.11+) with server configs from
+-- nvim-lspconfig, installed as a third native package:
+--
+--   git clone https://github.com/neovim/nvim-lspconfig \
+--     ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig
+--
+-- The list mirrors the eglot setup in Emacs (minus Java). When a buffer's
+-- filetype matches, its server attaches automatically; nothing is installed
+-- behind the scenes, so every server must already be on PATH. Builtin
+-- keymaps on attach: gra code action, gri implementation, grn rename,
+-- grr references, grt type definition, grx codelens, gO document symbols,
+-- K hover, <C-S> signature help, CTRL-] definition, gq format, [d / ]d and
+-- <C-W>d diagnostics. Status: :checkhealth vim.lsp (or :LspInfo).
+if vim.api.nvim_get_runtime_file("lsp/gopls.lua", false)[1] then
+	vim.lsp.enable({
+		"bashls", -- bash and sh
+		"clangd", -- C and C++
+		"cssls", -- CSS, SCSS, and Less
+		"dockerls", -- Dockerfile
+		"gopls", -- Go
+		"html", -- HTML
+		"intelephense", -- PHP
+		"jsonls", -- JSON
+		"lua_ls", -- Lua
+		"marksman", -- Markdown
+		"pylsp", -- Python
+		"ruby_lsp", -- Ruby
+		"rust_analyzer", -- Rust
+		"terraformls", -- Terraform
+		"ts_ls", -- JavaScript and TypeScript
+		"yamlls", -- YAML
+	})
+else
+	vim.notify(
+		"nvim-lspconfig not found. Install it with:\n  git clone https://github.com/neovim/nvim-lspconfig ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig",
+		vim.log.levels.WARN
+	)
+end
+
 -- [[ Colorscheme: Modus ]]
 -- Loaded from the native pack directory (see header).
 local ok, modus = pcall(require, "modus-themes")
@@ -203,6 +270,11 @@ if ok then
 			-- fully inverted, high-contrast selected item.
 			h.Pmenu = { fg = c.fg_main, bg = c.bg_main }
 			h.PmenuSel = { fg = c.bg_main, bg = c.fg_main }
+			-- Popup-menu border ('pumborder'); same color as float borders.
+			h.PmenuBorder = { link = "FloatBorder" }
+			-- Window separators: the only frame an ordinary window can have, so
+			-- they get the border color too ('winborder' does not apply to them).
+			h.WinSeparator = { link = "FloatBorder" }
 
 			-- mini.cursorword: replace the dim gray chip (bg = fg_dim) with a
 			-- clearly visible, theme-derived fg+bg. Text on the subtle
@@ -324,7 +396,8 @@ if ok_mini then
 			scroll_right = "<S-Right>",
 		},
 		options = { use_cache = true },
-		window = { config = { border = "rounded" } },
+		-- No 'window.config.border': mini.pick follows 'winborder' like every
+		-- other overlay, so all candidate lists keep the same border.
 	})
 
 	-- mini.extra is bundled with mini.nvim and supplies feature-parity pickers.
@@ -412,6 +485,7 @@ if ok_miniclue then
 
 			-- Other built-in key families
 			{ mode = "i", keys = "<C-x>" },
+			{ mode = "n", keys = "<C-x>" },
 			{ mode = { "n", "x" }, keys = "'" },
 			{ mode = { "n", "x" }, keys = "`" },
 			{ mode = { "n", "x" }, keys = '"' },
