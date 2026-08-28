@@ -6,6 +6,8 @@
 --     ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim
 --   git clone --branch stable https://github.com/nvim-mini/mini.nvim \
 --     ~/.local/share/nvim/site/pack/ui/start/mini.nvim
+--   git clone https://github.com/nvim-mini/mini.statuscolumn \
+--     ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
 
 -- Resolve provider hosts when available so discovery is deterministic but optional.
 local node_host_prog = vim.fn.exepath("neovim-node-host")
@@ -286,6 +288,14 @@ if ok then
 			-- (hint-colored by default is too subtle). Modus itself links picker
 			-- matches to CurSearch, e.g. SnacksPickerMatch.
 			h.MiniPickMatchRanges = { link = "CurSearch" }
+
+			-- mini.statuscolumn: the '▏' between the column and the buffer text is a
+			-- window frame, so it gets the border color (the module links it to
+			-- LineNr by default). MiniStatuscolumnSepCursor is left alone on purpose:
+			-- the module links it to CursorLineNr, which keeps the current line's
+			-- separator visible. MiniStatuscolumnDim is also left alone: the module
+			-- computes it from the active Modus LineNr on every colorscheme reload.
+			h.MiniStatuscolumnSep = { link = "FloatBorder" }
 		end,
 	})
 
@@ -328,8 +338,9 @@ else
 end
 
 -- [[ mini.nvim workflows ]]
--- All modules come from the single mini.nvim native package. If it is absent,
--- warn once rather than failing startup halfway through configuration.
+-- All of these modules come from the single mini.nvim native package (the one
+-- exception is mini.statuscolumn, see its own section below). If mini.nvim is
+-- absent, warn once rather than failing startup halfway through configuration.
 local ok_mini, miniicons = pcall(require, "mini.icons")
 if ok_mini then
 	miniicons.setup()
@@ -462,6 +473,47 @@ if ok_mini then
 else
 	vim.notify(
 		"mini.nvim not found. Install it with:\n  git clone --branch stable https://github.com/nvim-mini/mini.nvim ~/.local/share/nvim/site/pack/ui/start/mini.nvim",
+		vim.log.levels.WARN
+	)
+end
+
+-- [[ Statuscolumn: mini.statuscolumn ]]
+-- Fold, line number, sign and separator column, drawn as one 'statuscolumn'.
+-- The module is NOT part of mini.nvim v0.18.0 (the newest stable release), so it
+-- is installed as its own native package from the standalone repository:
+--
+--   git clone https://github.com/nvim-mini/mini.statuscolumn \
+--     ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
+--
+-- Once the stable mini.nvim checkout contains `lua/mini/statuscolumn.lua`,
+-- delete the standalone clone: two copies mean Neovim loads whichever comes
+-- first in 'runtimepath' and never sees the other.
+local ok_statuscolumn, ministatuscolumn = pcall(require, "mini.statuscolumn")
+if ok_statuscolumn then
+	local stc_copies = vim.api.nvim_get_runtime_file("lua/mini/statuscolumn.lua", true)
+	if #stc_copies > 1 then
+		vim.notify(
+			"Duplicate mini.statuscolumn (also shipped by mini.nvim). Remove the standalone clone:\n  rm -rf ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn",
+			vim.log.levels.WARN
+		)
+	end
+
+	-- Defaults, and why they fit this configuration:
+	--   content       per line `%=%l%C%s▏`, i.e. line number, fold, signs, separator.
+	--                 'foldcolumn' is 0, so the fold slot stays empty and only shows
+	--                 up if folding gets a column; signs keep working with
+	--                 'signcolumn' = 'yes' unchanged.
+	--                 Wrapped lines draw '↳' and virtual lines '•' instead of a
+	--                 number; inactive windows drop the '▏' separator.
+	--   dim_inactive  true - matches modus-themes' dim_inactive. The module dims via
+	--                 window-local 'winhighlight', modus via NormalNC, so they do not
+	--                 compete for the same groups.
+	-- Mouse clicks here go to MiniStatuscolumn.default_click(): focus the clicked
+	-- window, jump to that line, and center the line on a double click.
+	ministatuscolumn.setup()
+else
+	vim.notify(
+		"mini.statuscolumn not found. Install it with:\n  git clone https://github.com/nvim-mini/mini.statuscolumn ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn",
 		vim.log.levels.WARN
 	)
 end
