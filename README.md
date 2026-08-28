@@ -1,6 +1,6 @@
 # Neovim configuration
 
-A small, dependency-light Neovim configuration built around three native packages: the Modus colorscheme, mini.nvim, and nvim-lspconfig. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
+A small, dependency-light Neovim configuration built around four native packages: the Modus colorscheme, mini.nvim, mini.statuscolumn, and nvim-lspconfig. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
 
 ## Approach
 
@@ -45,9 +45,29 @@ git clone --branch stable https://github.com/nvim-mini/mini.nvim \
 
 git clone https://github.com/neovim/nvim-lspconfig \
   ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig
+
+# Temporary: this module is not in any stable mini.nvim release yet (see the note below)
+git clone https://github.com/nvim-mini/mini.statuscolumn \
+  ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
 ```
 
 Start Neovim. There is no install or compile command to run.
+
+> [!IMPORTANT]
+> **`mini.statuscolumn` is a standalone clone, and it must go as soon as it is redundant.** The module is not in any stable mini.nvim release — the newest tag, v0.18.0, does not ship it; only the beta `main` branch does — so a separate repository is the only way to add it without moving every other module onto beta code.
+>
+> After each `mini.nvim` pull, check and drop the clone if the library now provides the module itself:
+>
+> ```sh
+> test -f ~/.local/share/nvim/site/pack/ui/start/mini.nvim/lua/mini/statuscolumn.lua \
+>   && rm -rf ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
+> ```
+>
+> Leaving both copies in place is not harmless: Neovim loads whichever directory comes first in `'runtimepath'` and never sees the other, so the stale one wins silently, and both ship the same `doc/mini-statuscolumn.txt`, which collides in the help tags. `init.lua` warns at startup whenever it finds more than one copy; to check by hand, a count above `1` means the clone is redundant and `0` means it is missing:
+>
+> ```sh
+> nvim --headless '+lua print(#vim.api.nvim_get_runtime_file("lua/mini/statuscolumn.lua", true))' +q
+> ```
 
 ## Installed packages and modules
 
@@ -75,6 +95,7 @@ Start Neovim. There is no install or compile command to run.
 | `mini.pairs`        | Automatic bracket and quote pairs                                             |
 | `mini.pick`         | Files, grep, buffers, help, and extensible pickers                            |
 | `mini.splitjoin`    | Split or join bracketed argument lists                                        |
+| `mini.statuscolumn` | Fold, number, and sign column with a separator (standalone clone, see note)   |
 | `mini.statusline`   | Statusline with diagnostics, Git, diff, and file information                  |
 | `mini.surround`     | Add, delete, find, highlight, and replace surroundings                        |
 | `mini.extra`        | Bundled support pickers used by the mini.pick workflows                       |
@@ -606,6 +627,31 @@ require("mini.splitjoin").setup() -- defaults
 
 Put the cursor inside a bracketed region and press `gS` to toggle between one line and the multiline form, with correct indentation. See `:help MiniSplitjoin` for hooks such as trailing commas.
 
+### mini.statuscolumn
+
+The fold, line number, and sign column, drawn as one fast `'statuscolumn'` with a separator between column and text.
+
+**Configuration**
+
+```lua
+require("mini.statuscolumn").setup() -- defaults
+```
+
+**How to use**
+
+Nothing to press: each line gets `line number · fold · signs · separator`, and the sections are clickable — a click focuses that window and jumps to that line, a double click centers it. Wrapped lines draw `↳` and virtual lines `•` instead of a number, inactive windows drop the separator, and the whole column is dimmed in inactive windows.
+
+It fits the existing configuration without overrides:
+
+- `'signcolumn'` stays `"yes"`: the module draws signs through `%s`, so diagnostic and Git signs behave exactly as before, now sitting between the number and the text.
+- `'foldcolumn'` stays `0`, so the fold slot is empty until a fold column is asked for; folded lines keep using this config's `'foldtext'` label.
+- Inactive dimming uses window-local `'winhighlight'`, while modus-themes' `dim_inactive` uses `NormalNC` — the two do not compete.
+- `MiniStatuscolumnSep` is linked to `FloatBorder` in the theme hook, so the separator matches every other frame; `MiniStatuscolumnSepCursor` and `MiniStatuscolumnDim` keep the module defaults, which derive from the active Modus palette.
+
+**Caveat**
+
+The module is currently beta-only — see the [installation note](#installation-on-a-new-machine). Install it from the standalone repository, and remove that clone as soon as stable `mini.nvim` ships it.
+
 ### mini.statusline
 
 The statusline.
@@ -689,7 +735,7 @@ end
 
 ## Core behavior
 
-- Absolute line numbers, sign column, cursor line, mouse, and delayed system clipboard integration
+- Absolute line numbers, sign column, and cursor line, drawn through `mini.statuscolumn`; mouse and delayed system clipboard integration
 - Smart-case search, live substitution preview, persistent undo, and confirmation before abandoning unsaved changes
 - Two-space indentation, recursive `:find`, visible whitespace, and bilingual English/Spanish spell checking in prose buffers
 - Treesitter highlighting and folding when an installed parser is available, with regex highlighting and indent folding as fallbacks
@@ -713,8 +759,11 @@ Keeping these removals explicit prevents old workflows from silently returning a
 ```sh
 git -C ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim pull
 git -C ~/.local/share/nvim/site/pack/ui/start/mini.nvim pull
+git -C ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn pull
 git -C ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig pull
 ```
+
+After pulling `mini.nvim`, check whether it finally ships `mini.statuscolumn` and drop the standalone clone if it does (see the [installation note](#installation-on-a-new-machine)); the clone tracks the beta branch, so it also needs its own pulls until then.
 
 Language servers live outside this configuration, so reinstalling one can change whether it starts at all. Reinstall `yaml-language-server` with a hoisted node layout:
 
