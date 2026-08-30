@@ -106,8 +106,10 @@ vim.opt.fillchars:append({ eob = " " })
 vim.opt.formatoptions:append("n")
 -- Keep 3 columns of context when scrolling horizontally
 vim.o.sidescrolloff = 3
--- Shell-like completion to the longest unambiguous match
-vim.o.wildmode = "longest:full,full"
+-- mini.cmdline owns 'wildmode' ("noselect,full"): the completion popup follows
+-- typing without inserting anything, so free text like search patterns is safe.
+-- Setting "longest:full,full" here instead would make the auto-trigger insert
+-- the longest common prefix of the candidates over what you type.
 
 -- Folding: everything unfolded by default; fold with zc/zo/zM/zR
 vim.o.foldmethod = "indent" -- fallback where no treesitter parser exists
