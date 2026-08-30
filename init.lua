@@ -231,7 +231,7 @@ if vim.api.nvim_get_runtime_file("lsp/gopls.lua", false)[1] then
 		"ruby_lsp", -- Ruby
 		"rust_analyzer", -- Rust
 		"terraformls", -- Terraform
-		"ts_ls", -- JavaScript and TypeScript
+		"tsc", -- JavaScript and TypeScript (native TS 7 server; ts_ls cannot run on TS 7: no tsserver.js)
 		"yamlls", -- YAML
 	})
 else
@@ -239,6 +239,26 @@ else
 		"nvim-lspconfig not found. Install it with:\n  git clone https://github.com/neovim/nvim-lspconfig ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig",
 		vim.log.levels.WARN
 	)
+end
+
+-- Color helpers shared by the Modus on_highlights hook and the listchar
+-- dimming below. blend(fore, back, t): t = 0 keeps `fore`, t = 1 returns
+-- `back`; hex_to_nr accepts both '#rrggbb' strings and integer colors.
+local function rgb_color(n)
+	return { math.floor(n / 65536), math.floor(n / 256) % 256, n % 256 }
+end
+local function blend(fore, back, t)
+	local f, b = rgb_color(fore), rgb_color(back)
+	local ch = function(i)
+		return math.floor(f[i] * (1 - t) + b[i] * t + 0.5)
+	end
+	return ch(1) * 65536 + ch(2) * 256 + ch(3)
+end
+local function hex_to_nr(value)
+	if type(value) == "string" then
+		return tonumber(value:sub(2), 16)
+	end
+	return value
 end
 
 -- [[ Colorscheme: Modus ]]
@@ -298,6 +318,14 @@ if ok then
 			-- separator visible. MiniStatuscolumnDim is also left alone: the module
 			-- computes it from the active Modus LineNr on every colorscheme reload.
 			h.MiniStatuscolumnSep = { link = "FloatBorder" }
+
+			-- mini.indentscope: the scope glyph is the plain box-drawing '│' and it
+			-- must read as a shadow of the indent, not as content. Modus has no
+			-- palette color dimmer than fg_dim, so fg_dim is blended further into
+			-- the background: t = 0 keeps fg_dim, t = 1 is invisible; 0.5 keeps the
+			-- outline visible on both styles. MiniIndentscopeSymbolOff links here by
+			-- default, so misaligned scopes render with the same tone.
+			h.MiniIndentscopeSymbol = { fg = blend(hex_to_nr(c.fg_dim), hex_to_nr(c.bg_main), 0.5) }
 		end,
 	})
 
@@ -305,16 +333,6 @@ if ok then
 
 	-- Dim listchars (tab/trail → NonText, nbsp → SpecialKey) to a subtle,
 	-- theme-derived tone instead of the theme's mid-gray.
-	local function rgb_color(n)
-		return { math.floor(n / 65536), math.floor(n / 256) % 256, n % 256 }
-	end
-	local function blend(fore, back, t)
-		local f, b = rgb_color(fore), rgb_color(back)
-		local ch = function(i)
-			return math.floor(f[i] * (1 - t) + b[i] * t + 0.5)
-		end
-		return ch(1) * 65536 + ch(2) * 256 + ch(3)
-	end
 	local function dim_listchars()
 		local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
 		local nontext = vim.api.nvim_get_hl(0, { name = "NonText" })
@@ -437,7 +455,7 @@ if ok_mini then
 
 	require("mini.animate").setup()
 	require("mini.cursorword").setup()
-	require("mini.indentscope").setup()
+	require("mini.indentscope").setup({ symbol = "│" })
 	require("mini.statusline").setup({ use_icons = true })
 
 	-- Explorer and buffer lifecycle

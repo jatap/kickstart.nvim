@@ -516,12 +516,12 @@ Visualizes and selects the current indentation scope.
 **Configuration**
 
 ```lua
-require("mini.indentscope").setup() -- defaults
+require("mini.indentscope").setup({ symbol = "│" }) -- plain glyph, dimmed color
 ```
 
 **How to use**
 
-- The current indentation chunk is outlined as you move through code.
+- The current indentation chunk is outlined as you move through code. The glyph is the plain box-drawing `│`, colored with Modus' dim foreground blended further toward the background so it reads as a subtle shadow rather than content.
 - `ii` selects the scope body (without its leading border); `ai` includes the border.
 - `[i` / `]i` move to the previous / next scope edge. mini.bracketed's indent target is disabled so these keys stay with mini.indentscope.
 
