@@ -87,7 +87,7 @@ vim.o.softtabstop = 2
 vim.o.smartindent = true
 
 -- Keep cursor context when scrolling / jumping
-vim.o.scrolloff = 8
+vim.o.scrolloff = 1
 
 -- Keep the view stable when splitting
 vim.o.splitkeep = "screen"
