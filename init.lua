@@ -371,6 +371,40 @@ if ok_mini then
 	require("mini.completion").setup({
 		mappings = { scroll_down = "<PageDown>", scroll_up = "<PageUp>" },
 	})
+
+	-- HACK (waiting for an upstream mini.nvim fix; remove once fixed there):
+	-- mini.completion (v0.18.0; mini.nvim main is identical as of 2026-08) vs
+	-- the TypeScript 7 native server ('tsc --lsp'). For member completion with
+	-- an empty prefix (`[123].`, `"str".`, `arr.`), the server includes a
+	-- special item ('Symbol') whose `textEdit` range covers the trigger dot.
+	-- mini.completion takes the completion start column from the first item
+	-- carrying a `textEdit`, so the completion base becomes "." and its default
+	-- prefix filter then drops every real member. The popup ends up with a
+	-- lone 'Symbol' (or, when a stale request response wins the race, unrelated
+	-- globals) instead of the array/string/number methods.
+	-- Same root behaviour that Neovim core hit with tsgo and fixed in 0.12
+	-- (neovim/neovim discussion #38042); blink.cmp is unaffected. Fix: reject a
+	-- server-derived start column that would make the base contain non-keyword
+	-- characters, and use the keyword start instead (the same fallback
+	-- expression mini.completion itself uses).
+	local ts_filetypes = { typescript = true, typescriptreact = true, javascript = true, javascriptreact = true }
+	local completefunc_lsp = MiniCompletion.completefunc_lsp
+	MiniCompletion.completefunc_lsp = function(findstart, base)
+		if findstart ~= 1 then
+			return completefunc_lsp(findstart, base)
+		end
+		local col = completefunc_lsp(findstart, base)
+		-- Pass through cancel/deferred signals (-2/-3) and other filetypes.
+		if type(col) ~= "number" or col < 0 or not ts_filetypes[vim.bo.filetype] then
+			return col
+		end
+		local line = vim.api.nvim_get_current_line()
+		local cur_col = vim.api.nvim_win_get_cursor(0)[2]
+		if line:sub(col + 1, cur_col):match("[^%w_]") then
+			col = vim.fn.match(line:sub(1, cur_col), "\\k*$")
+		end
+		return col
+	end
 	require("mini.operators").setup({ replace = { prefix = "gR" } })
 	require("mini.pairs").setup()
 	require("mini.splitjoin").setup()
