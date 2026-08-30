@@ -469,6 +469,7 @@ if ok_mini then
 			MiniFiles.open(nil, false)
 		end
 	end, { desc = "Toggle file explorer at working directory" })
+	vim.keymap.set("n", "<leader>c", "<C-w>c", { desc = "[C]lose window" })
 	vim.keymap.set("n", "<leader>bd", function()
 		MiniBufremove.delete(0, false)
 	end, { desc = "[B]uffer [D]elete without closing layout" })
