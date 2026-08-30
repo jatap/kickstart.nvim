@@ -370,7 +370,8 @@ require("mini.cmdline").setup() -- defaults (needs Neovim ≥ 0.11)
 
 **How to use**
 
-- `:` (and `/`, `?`, `:!`) gets a completion popup as you type; all built-in command-line completion keys still work.
+- `:` (and `/`, `?`, `:!`) gets a completion popup as you type; nothing is inserted automatically, so free text stays untouched. All built-in command-line completion keys still work (`:h wildmenu`).
+- While the popup is open, `<Up>`/`<Down>` select the previous/next entry and `<C-y>` accepts the selected entry. When the popup is closed, `<Up>`/`<Down>` recall command history. `<Left>`/`<Right>` keep moving the cursor.
 - Typing a range (e.g. `:2,8delete` or `:/foo/,/bar/s/x/y/`) shows an autopeek floating window with the affected lines before you commit.
 - On Neovim ≥ 0.12 completion is fuzzy; see `:help MiniCmdline`.
 

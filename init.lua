@@ -362,6 +362,24 @@ if ok_mini then
 	require("mini.bracketed").setup({ indent = { suffix = "" } })
 	require("mini.bufremove").setup()
 	require("mini.cmdline").setup()
+
+	-- Use <Up>/<Down> to move through the completion popup while it is open;
+	-- when it is closed they keep recalling command history. This overrides
+	-- mini.cmdline's map_arrows behaviour for these two keys only; <Left>/<Right>
+	-- keep moving the cursor and <C-n>/<C-p>/<C-e>/<C-Y> stay native (:h wildmenu).
+	local wildmenu_or = function(fallback_key, wildmenu_key)
+		return function()
+			return vim.fn.wildmenumode() == 1 and wildmenu_key or fallback_key
+		end
+	end
+	vim.keymap.set("c", "<Up>", wildmenu_or("<Up>", "<C-p>"), {
+		expr = true,
+		desc = "Popup: previous entry, else older history",
+	})
+	vim.keymap.set("c", "<Down>", wildmenu_or("<Down>", "<C-n>"), {
+		expr = true,
+		desc = "Popup: next entry, else newer history",
+	})
 	require("mini.diff").setup({
 		mappings = { goto_first = "[G", goto_prev = "[g", goto_next = "]g", goto_last = "]G" },
 	})
