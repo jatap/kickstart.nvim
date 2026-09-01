@@ -8,6 +8,8 @@
 --     ~/.local/share/nvim/site/pack/ui/start/mini.nvim
 --   git clone https://github.com/nvim-mini/mini.statuscolumn \
 --     ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
+--   git clone https://github.com/MeanderingProgrammer/render-markdown.nvim \
+--     ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim
 
 -- Resolve provider hosts when available so discovery is deterministic but optional.
 local node_host_prog = vim.fn.exepath("neovim-node-host")
@@ -591,11 +593,104 @@ else
 	)
 end
 
+-- [[ Rendered Markdown: render-markdown.nvim ]]
+-- Shows Markdown roughly as it will be read: heading icons and backgrounds,
+-- code block styling, tables, checkboxes, and callouts. The buffer stays a
+-- plain Markdown file; Insert mode shows the raw text again. Native package:
+--
+--   git clone https://github.com/MeanderingProgrammer/render-markdown.nvim \
+--     ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim
+--
+-- It depends only on what this setup already has: the treesitter markdown,
+-- markdown_inline, and html parsers in ~/.local/share/nvim/site/parser, and
+-- mini.icons (from mini.nvim) for code block language icons. Defaults fit:
+-- renders in Normal mode, debounces at 100 ms, and ignores files over 10 MB.
+local ok_render, rendermarkdown = pcall(require, "render-markdown")
+if ok_render then
+	rendermarkdown.setup({
+		-- Inline heading icons: '#'s are concealed and the icon starts at the
+		-- left edge of the text. The default 'overlay' left-pads the icon, so
+		-- every heading would start further right than the body text.
+		heading = { position = "inline" },
+		-- Checkbox and callout completions come from the plugin's own
+		-- in-process LSP server, so mini.completion treats it like any other
+		-- attached language server (alongside marksman).
+		completions = { lsp = { enabled = true } },
+		-- Both extras are off because their dependencies are not installed:
+		-- latex rendering needs the latex parser plus utftex or latex2text on
+		-- PATH, and YAML frontmatter rendering needs the yaml parser. Install
+		-- the missing pieces and drop the matching line to turn either on.
+		latex = { enabled = false },
+		yaml = { enabled = false },
+	})
+
+	-- Markdown-only, buffer-local keys, so <leader>m does nothing elsewhere.
+	-- mini.clue lists them after <Space> because it reads map descriptions.
+	vim.api.nvim_create_autocmd("FileType", {
+		group = vim.api.nvim_create_augroup("render-markdown-keys", { clear = true }),
+		pattern = "markdown",
+		callback = function(args)
+			vim.keymap.set("n", "<leader>mm", rendermarkdown.toggle, {
+				buffer = args.buf,
+				desc = "Toggle [M]arkdown rendering",
+			})
+			vim.keymap.set("n", "<leader>mp", rendermarkdown.preview, {
+				buffer = args.buf,
+				desc = "[M]arkdown [P]review in a split",
+			})
+			vim.keymap.set("n", "<leader>me", rendermarkdown.expand, {
+				buffer = args.buf,
+				desc = "[M]arkdown [E]xpand raw text around cursor",
+			})
+			vim.keymap.set("n", "<leader>mc", rendermarkdown.contract, {
+				buffer = args.buf,
+				desc = "[M]arkdown [C]ontract raw text around cursor",
+			})
+		end,
+	})
+else
+	vim.notify(
+		"render-markdown.nvim not found. Install it with:\n  git clone https://github.com/MeanderingProgrammer/render-markdown.nvim ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim",
+		vim.log.levels.WARN
+	)
+end
+
 -- [[ Key clues: mini.clue ]]
 -- mini.clue reads descriptions from existing mappings and adds clues for
 -- common built-in key prefixes without creating a separate mapping catalog.
 local ok_miniclue, miniclue = pcall(require, "mini.clue")
 if ok_miniclue then
+	-- Name the leader mapping groups. Without a clue for the prefix itself,
+	-- mini.clue labels a group with an anonymous '+N choices'; a clue whose
+	-- description is a function is re-evaluated for every popup, so the row
+	-- shows the group name plus a live count: 'Search (+10 choices)'.
+	local function leader_group(prefix, name)
+		return {
+			mode = "n",
+			keys = prefix,
+			desc = function()
+				local count = 0
+				local raw = vim.api.nvim_replace_termcodes(prefix, true, true, true)
+				local maps = vim.list_extend(vim.api.nvim_get_keymap("n"), vim.api.nvim_buf_get_keymap(0, "n"))
+				for _, map in ipairs(maps) do
+					if map.lhs:sub(1, #raw) == raw then
+						count = count + 1
+					end
+				end
+				return ("%s (+%d choice%s)"):format(name, count, count == 1 and "" or "s")
+			end,
+		}
+	end
+
+	-- '<leader>m' maps only in Markdown buffers, so offer its group clue only
+	-- there: mini.clue also accepts a callable clue and re-expands it for
+	-- every popup, and a clue that returns nil is skipped.
+	local function markdown_group()
+		if vim.bo.filetype == "markdown" then
+			return leader_group("<leader>m", "Markdown")
+		end
+	end
+
 	miniclue.setup({
 		window = { config = { width = "auto" } },
 		triggers = {
@@ -618,6 +713,12 @@ if ok_miniclue then
 			{ mode = "n", keys = "<C-w>" },
 		},
 		clues = {
+			leader_group("<leader>b", "Buffers"),
+			leader_group("<leader>d", "Diagnostics"),
+			leader_group("<leader>g", "Git"),
+			markdown_group,
+			leader_group("<leader>s", "Search"),
+			leader_group("<leader>t", "Toggles"),
 			miniclue.gen_clues.square_brackets(),
 			miniclue.gen_clues.builtin_completion(),
 			miniclue.gen_clues.g(),

@@ -1,6 +1,6 @@
 # Neovim configuration
 
-A small, dependency-light Neovim configuration built around four native packages: the Modus colorscheme, mini.nvim, mini.statuscolumn, and nvim-lspconfig. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
+A small, dependency-light Neovim configuration built around five native packages: the Modus colorscheme, mini.nvim, mini.statuscolumn, nvim-lspconfig, and render-markdown.nvim. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
 
 ## Approach
 
@@ -13,7 +13,7 @@ A small, dependency-light Neovim configuration built around four native packages
 
 ## Requirements
 
-- Neovim ≥ 0.10; `mini.cmdline` needs ≥ 0.11 and works best on ≥ 0.12
+- Neovim ≥ 0.10; `mini.cmdline` needs ≥ 0.11 and works best on ≥ 0.12, and `render-markdown.nvim` needs ≥ 0.11 for all features
 - Git
 - [ripgrep](https://github.com/BurntSushi/ripgrep) for fast file and live-grep pickers
 - Optional: `fd` as another file-search backend
@@ -36,6 +36,7 @@ git clone <your-config-repo> ~/.config/nvim
 mkdir -p ~/.local/share/nvim/site/pack/theme/start
 mkdir -p ~/.local/share/nvim/site/pack/ui/start
 mkdir -p ~/.local/share/nvim/site/pack/lsp/start
+mkdir -p ~/.local/share/nvim/site/pack/markdown/start
 
 git clone https://github.com/miikanissi/modus-themes.nvim \
   ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim
@@ -45,6 +46,9 @@ git clone --branch stable https://github.com/nvim-mini/mini.nvim \
 
 git clone https://github.com/neovim/nvim-lspconfig \
   ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig
+
+git clone https://github.com/MeanderingProgrammer/render-markdown.nvim \
+  ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim
 
 # Temporary: this module is not in any stable mini.nvim release yet (see the note below)
 git clone https://github.com/nvim-mini/mini.statuscolumn \
@@ -71,35 +75,36 @@ Start Neovim. There is no install or compile command to run.
 
 ## Installed packages and modules
 
-| Package or module   | Role                                                                          |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `modus-themes.nvim` | Automatic light/dark Modus theme with inactive-window dimming                 |
-| `mini.ai`           | Extended `a`/`i` text objects                                                 |
-| `mini.animate`      | Cursor, scroll, resize, and window animations                                 |
-| `mini.basics`       | Common option defaults, option toggles, terminal setup, and yank highlighting |
-| `mini.bracketed`    | Consistent previous/next navigation with `[` and `]`                          |
-| `mini.bufremove`    | Delete buffers without destroying the window layout                           |
-| `mini.clue`         | Discoverable key-prefix popup                                                 |
-| `mini.cmdline`      | Command-line completion, range preview, and externalized UI                   |
-| `mini.comment`      | Comment operators and text objects                                            |
-| `mini.completion`   | Two-stage LSP and fallback insert completion                                  |
-| `mini.cursorword`   | Highlight the word under the cursor                                           |
-| `mini.diff`         | Git-index hunks, hunk operators, and hunk navigation                          |
-| `mini.files`        | Editable, floating file explorer                                              |
-| `mini.git`          | Git metadata, `:Git`, and context-aware Git inspection                        |
-| `mini.icons`        | Filetype, file, and LSP-kind icons                                            |
-| `mini.indentscope`  | Active indentation scope and scope text objects                               |
-| `mini.jump`         | Repeatable `f`/`F`/`t`/`T` motions                                            |
-| `mini.jump2d`       | Label-based jump to visible text                                              |
-| `mini.operators`    | Evaluate, exchange, multiply, replace, and sort operators                     |
-| `mini.pairs`        | Automatic bracket and quote pairs                                             |
-| `mini.pick`         | Files, grep, buffers, help, and extensible pickers                            |
-| `mini.splitjoin`    | Split or join bracketed argument lists                                        |
-| `mini.statuscolumn` | Fold, number, and sign column with a separator (standalone clone, see note)   |
-| `mini.statusline`   | Statusline with diagnostics, Git, diff, and file information                  |
-| `mini.surround`     | Add, delete, find, highlight, and replace surroundings                        |
-| `mini.extra`        | Bundled support pickers used by the mini.pick workflows                       |
-| `nvim-lspconfig`    | LSP server configurations for the native Neovim LSP client                    |
+| Package or module      | Role                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| `modus-themes.nvim`    | Automatic light/dark Modus theme with inactive-window dimming                 |
+| `mini.ai`              | Extended `a`/`i` text objects                                                 |
+| `mini.animate`         | Cursor, scroll, resize, and window animations                                 |
+| `mini.basics`          | Common option defaults, option toggles, terminal setup, and yank highlighting |
+| `mini.bracketed`       | Consistent previous/next navigation with `[` and `]`                          |
+| `mini.bufremove`       | Delete buffers without destroying the window layout                           |
+| `mini.clue`            | Discoverable key-prefix popup                                                 |
+| `mini.cmdline`         | Command-line completion, range preview, and externalized UI                   |
+| `mini.comment`         | Comment operators and text objects                                            |
+| `mini.completion`      | Two-stage LSP and fallback insert completion                                  |
+| `mini.cursorword`      | Highlight the word under the cursor                                           |
+| `mini.diff`            | Git-index hunks, hunk operators, and hunk navigation                          |
+| `mini.files`           | Editable, floating file explorer                                              |
+| `mini.git`             | Git metadata, `:Git`, and context-aware Git inspection                        |
+| `mini.icons`           | Filetype, file, and LSP-kind icons                                            |
+| `mini.indentscope`     | Active indentation scope and scope text objects                               |
+| `mini.jump`            | Repeatable `f`/`F`/`t`/`T` motions                                            |
+| `mini.jump2d`          | Label-based jump to visible text                                              |
+| `mini.operators`       | Evaluate, exchange, multiply, replace, and sort operators                     |
+| `mini.pairs`           | Automatic bracket and quote pairs                                             |
+| `mini.pick`            | Files, grep, buffers, help, and extensible pickers                            |
+| `mini.splitjoin`       | Split or join bracketed argument lists                                        |
+| `mini.statuscolumn`    | Fold, number, and sign column with a separator (standalone clone, see note)   |
+| `mini.statusline`      | Statusline with diagnostics, Git, diff, and file information                  |
+| `mini.surround`        | Add, delete, find, highlight, and replace surroundings                        |
+| `mini.extra`           | Bundled support pickers used by the mini.pick workflows                       |
+| `nvim-lspconfig`       | LSP server configurations for the native Neovim LSP client                    |
+| `render-markdown.nvim` | Rendered Markdown view: headings, code blocks, tables, checkboxes, callouts   |
 
 ## Keymap quick reference
 
@@ -127,8 +132,10 @@ Leader is `<Space>`.
 
 Window cycling maps to Vim's own `<C-W>w` and `<C-W>W` motions, which visit every window in the tab — ordinary splits, the quickfix and location-list windows, and floating windows — so `<C-X>o` reaches buffers that the directional `<C-Arrow>` maps cannot. Two consequences:
 
-- **`<C-X>` becomes a mapping prefix.** On its own it is Vim's decrement-number operator, and in Normal mode it now waits `'timeoutlen'` (300 ms here) for a possible second key before decrementing. Lower `'timeoutlen'`, or move the pair under another prefix, if you decrement numbers by keyboard often.
-- **Normal mode only.** Insert-mode `<C-X>` completion keeps working unchanged, but inside a `:terminal` the keys reach the program. To hop out of a terminal into the next window, add `vim.keymap.set("t", "<C-X>o", [[<C-\><C-n><C-W>w]], { desc = "Next window" })`.
+> [!NOTE]
+> **`<C-X>` becomes a mapping prefix.** On its own it is Vim's decrement-number operator, and in Normal mode it now waits `'timeoutlen'` (300 ms here) for a possible second key before decrementing. Lower `'timeoutlen'`, or move the pair under another prefix, if you decrement numbers by keyboard often.
+>
+> **Normal mode only.** Insert-mode `<C-X>` completion keeps working unchanged, but inside a `:terminal` the keys reach the program. To hop out of a terminal into the next window, add `vim.keymap.set("t", "<C-X>o", [[<C-\><C-n><C-W>w]], { desc = "Next window" })`.
 
 ### mini.pick
 
@@ -148,6 +155,17 @@ Window cycling maps to Vim's own `<C-W>w` and `<C-W>W` motions, which visit ever
 | `<leader>/`        | Lines in the current buffer        |
 
 Inside a picker, use `<Up>`/`<Down>` to select, Page Up/Down to scroll, `<Left>`/`<Right>` to edit the query, `<Tab>` to preview, `<S-Tab>` for mapping help, `<CR>` to choose, `<C-s>` for a split, `<C-v>` for a vertical split, and `<C-t>` for a tab.
+
+### Markdown
+
+Buffer-local to Markdown buffers; in every other filetype `<leader>m` stays unmapped.
+
+| Key          | Action                                                        |
+| ------------ | ------------------------------------------------------------- |
+| `<leader>mm` | Toggle the rendered Markdown view                             |
+| `<leader>mp` | Show the rendered view in a side-by-side split                |
+| `<leader>me` | Show more raw text around the cursor (expand anti-conceal)    |
+| `<leader>mc` | Hide raw text around the cursor again (contract anti-conceal) |
 
 ### LSP
 
@@ -326,6 +344,30 @@ A delayed popup listing the keys available after a prefix — discoverability fo
 **Configuration**
 
 ```lua
+local function leader_group(prefix, name)
+  return {
+    mode = "n",
+    keys = prefix,
+    desc = function() -- re-evaluated on every popup, so the count stays live
+      local count = 0
+      local raw = vim.api.nvim_replace_termcodes(prefix, true, true, true)
+      local maps = vim.list_extend(vim.api.nvim_get_keymap("n"), vim.api.nvim_buf_get_keymap(0, "n"))
+      for _, map in ipairs(maps) do
+        if map.lhs:sub(1, #raw) == raw then
+          count = count + 1
+        end
+      end
+      return ("%s (+%d choice%s)"):format(name, count, count == 1 and "" or "s")
+    end,
+  }
+end
+
+local function markdown_group() -- '<leader>m' only maps in Markdown buffers
+  if vim.bo.filetype == "markdown" then
+    return leader_group("<leader>m", "Markdown")
+  end
+end
+
 require("mini.clue").setup({
   window = { config = { width = "auto" } },
   triggers = {
@@ -343,6 +385,12 @@ require("mini.clue").setup({
     { mode = "n", keys = "<C-w>" },
   },
   clues = {
+    leader_group("<leader>b", "Buffers"),
+    leader_group("<leader>d", "Diagnostics"),
+    leader_group("<leader>g", "Git"),
+    markdown_group,
+    leader_group("<leader>s", "Search"),
+    leader_group("<leader>t", "Toggles"),
     mini.clue.gen_clues.square_brackets(),
     mini.clue.gen_clues.builtin_completion(),
     mini.clue.gen_clues.g(),
@@ -357,6 +405,8 @@ require("mini.clue").setup({
 **How to use**
 
 Pause after a prefix — `<Space>`, `g`, `z`, `[`, `]`, `<C-w>`, `"`, `'`, `` ` ``, `<C-r>`, `<C-x>` — to see what comes next. Clue text comes from the mapping `desc` values, so it matches exactly what this config defines.
+
+Leader groups read `<Name> (+N choices)` with a live count — `Search (+10 choices)`, `Diagnostics (+1 choice)` — instead of an anonymous `+N choices`. The count is recomputed on every popup, and the `Markdown` group appears only in Markdown buffers, where its mappings exist.
 
 ### mini.cmdline
 
@@ -729,10 +779,40 @@ end
 **How to use**
 
 - Open a file of an enabled filetype: the server attaches automatically and the [LSP keymaps](#lsp) become active in that buffer.
-- `ts_ls` needs the **project's own** `typescript` to be 5.x, because typescript-language-server drives the classic `tsserver.js` and native TypeScript 7 no longer ships it. A `.js`/`.ts` file outside a project with a local 5.x dependency therefore gets no server — expected, not a configuration bug.
-- Do not downgrade the global `typescript` to 5.x to feed `ts_ls`: 5.x rejects `--lsp` (`error TS5023: Unknown compiler option '--lsp'`), and the global 7.x `tsc` is what Emacs eglot's `tsc --lsp` relies on.
+
+> [!WARNING]
+> `ts_ls` needs the **project's own** `typescript` to be 5.x, because typescript-language-server drives the classic `tsserver.js` and native TypeScript 7 no longer ships it. A `.js`/`.ts` file outside a project with a local 5.x dependency therefore gets no server — expected, not a configuration bug.
+>
+> Do not downgrade the global `typescript` to 5.x to feed `ts_ls`: 5.x rejects `--lsp` (`error TS5023: Unknown compiler option '--lsp'`), and the global 7.x `tsc` is what Emacs eglot's `tsc --lsp` relies on.
+
 - mini.completion feeds LSP completion automatically once a server attaches.
 - Check attachment and health with `:checkhealth vim.lsp` (alias `:LspInfo`); restart servers with `:lsp restart` and read logs with `:LspLog`.
+
+### render-markdown.nvim
+
+Renders Markdown close to how it will be read: heading icons and backgrounds, code block styling with language icons, pipe tables, checkboxes, quotes, callouts, and links. The buffer stays a plain Markdown file — editing, spell checking, and marksman behave as before — and Insert mode shows the raw text again.
+
+**Configuration**
+
+```lua
+require("render-markdown").setup({
+  heading = { position = "inline" },          -- icons at the left edge, not indented
+  completions = { lsp = { enabled = true } }, -- checkbox and callout completions
+  latex = { enabled = false },                -- no latex parser, no utftex/latex2text on PATH
+  yaml = { enabled = false },                 -- no yaml parser; frontmatter stays raw
+})
+```
+
+It reuses what this setup already has: the treesitter `markdown`, `markdown_inline`, and `html` parsers in `~/.local/share/nvim/site/parser`, and `mini.icons` for code block language icons. Headings use the `inline` position, so each icon replaces the `#` marks at the left edge; the default `overlay` would indent it. Everything else keeps the plugin defaults: rendering in Normal mode (raw text while inserting), a 100 ms debounce, a 10 MB size cap, and anti-conceal — the rendered element under the cursor flips back to its raw form.
+
+**How to use**
+
+- Rendering turns on automatically in every Markdown buffer; `<leader>mm` toggles it. The mappings are buffer-local to Markdown, so `<leader>m` does nothing in other filetypes.
+- `<leader>mp` puts the rendered view in a side window next to the raw text.
+- `<leader>me` / `<leader>mc` grow and shrink the raw-text area around the cursor (the anti-conceal margin).
+- Typing a checkbox (`- [ ]`) or a callout (`> [!NOTE]`) pops completions served by the plugin's own in-process LSP client, flowing through mini.completion's usual LSP stage.
+- Health and requirements: `:checkhealth render-markdown`; full reference: `:help render-markdown`.
+- `tools/render-markdown-demo.md` exercises every rendered component — open it to see the setup working.
 
 ## Core behavior
 
@@ -740,6 +820,7 @@ end
 - Smart-case search, live substitution preview, persistent undo, and confirmation before abandoning unsaved changes
 - Two-space indentation, recursive `:find`, visible whitespace, and bilingual English/Spanish spell checking in prose buffers
 - Treesitter highlighting and folding when an installed parser is available, with regex highlighting and indent folding as fallbacks
+- Markdown buffers render headings, code blocks, tables, checkboxes, and callouts through render-markdown.nvim; `<leader>mm` toggles the view
 - One border style for every overlay — square-cornered lines from `'winborder'` (floating windows) and `'pumborder'` (candidate menus) — plus automatically opened quickfix windows after `:grep` or `:make`
 - Built-in LSP: a language server attaches by filetype when its binary is on `PATH`, with Neovim's default `gr`/`gO`/`K` keymaps and diagnostic keys
 
@@ -762,17 +843,19 @@ git -C ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim pull
 git -C ~/.local/share/nvim/site/pack/ui/start/mini.nvim pull
 git -C ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn pull
 git -C ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig pull
+git -C ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim pull
 ```
 
 After pulling `mini.nvim`, check whether it finally ships `mini.statuscolumn` and drop the standalone clone if it does (see the [installation note](#installation-on-a-new-machine)); the clone tracks the beta branch, so it also needs its own pulls until then.
 
-Language servers live outside this configuration, so reinstalling one can change whether it starts at all. Reinstall `yaml-language-server` with a hoisted node layout:
-
-```sh
-pnpm add -g yaml-language-server --config.node-linker=hoisted
-```
-
-pnpm's default symlinked global layout drops one of its transitive dependencies (`vscode-languageserver-protocol`), and the server then dies immediately with `MODULE_NOT_FOUND` — which breaks the `yamlls` attachment here and the equivalent eglot server in Emacs.
+> [!WARNING]
+> Language servers live outside this configuration, so reinstalling one can change whether it starts at all. Reinstall `yaml-language-server` with a hoisted node layout:
+>
+> ```sh
+> pnpm add -g yaml-language-server --config.node-linker=hoisted
+> ```
+>
+> pnpm's default symlinked global layout drops one of its transitive dependencies (`vscode-languageserver-protocol`), and the server then dies immediately with `MODULE_NOT_FOUND` — which breaks the `yamlls` attachment here and the equivalent eglot server in Emacs.
 
 ## Layout
 
@@ -783,7 +866,8 @@ pnpm's default symlinked global layout drops one of its transitive dependencies 
 ├── .gitignore
 ├── .luarc.json
 └── tools/
-    └── nvim-border-audit.py
+    ├── nvim-border-audit.py
+    └── render-markdown-demo.md
 ```
 
 `tools/` holds development helpers; Neovim never loads anything from it.
