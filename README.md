@@ -192,7 +192,7 @@ Useful commands: `:checkhealth vim.lsp` (also `:LspInfo`) for attachment status,
 
 ## Plugin playbook
 
-A per-module reference for everything configured in `init.lua`. Each section shows the exact **Configuration** the config uses and the essential **How to use** keys. All modules come from three native packages — `modus-themes.nvim`, `mini.nvim`, and `nvim-lspconfig` (see Installation); if a package is missing, the config warns and skips only the affected modules instead of failing to start.
+A per-module reference for everything configured in `init.lua`. Each section shows the exact **Configuration** the config uses and the essential **How to use** keys. All modules come from five native packages — `modus-themes.nvim`, `mini.nvim`, `mini.statuscolumn`, `nvim-lspconfig`, and `render-markdown.nvim` (see Installation); if a package is missing, the config warns and skips only the affected modules instead of failing to start.
 
 For every option, run `:help <Module>` — for example `:help MiniPick`, `:help MiniFiles`, or `:help mini.nvim`.
 
