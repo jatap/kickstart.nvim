@@ -88,6 +88,21 @@ vim.o.tabstop = 2
 vim.o.softtabstop = 2
 vim.o.smartindent = true
 
+-- Go ships gofmt, which indents with tabs at a display width of 8. The global
+-- 2-column defaults above would make those tabs look like 2-space indentation,
+-- and Neovim's built-in go ftplugin sets noexpandtab/shiftwidth/softtabstop but
+-- never 'tabstop'. Override it per buffer, mirroring the Emacs go-buffer-setup
+-- hook that restores tab-width 8 for Go.
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "go", "gomod", "gowork" },
+	callback = function()
+		vim.bo.expandtab = false
+		vim.bo.tabstop = 8
+		vim.bo.shiftwidth = 0 -- follow 'tabstop'
+		vim.bo.softtabstop = 0 -- Tab inserts real tabs
+	end,
+})
+
 -- Keep cursor context when scrolling / jumping
 vim.o.scrolloff = 1
 
@@ -182,6 +197,18 @@ vim.api.nvim_create_autocmd("FileType", {
 	pattern = "*",
 	callback = function(args)
 		vim.wo.spell = vim.tbl_contains({ "gitcommit", "markdown", "text" }, args.match)
+	end,
+})
+
+-- [[ Line wrapping ]]
+-- Long prose lines wrap in prose buffers only. mini.basics turns 'wrap' off
+-- globally (with 'linebreak' on), so this re-enables it where reading matters.
+-- 'wrap' is window-local, so it is set through 'vim.wo' and reset on leaving a
+-- prose buffer: otherwise the same window keeps wrapping when it shows code.
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "*",
+	callback = function(args)
+		vim.wo.wrap = vim.tbl_contains({ "gitcommit", "markdown", "text" }, args.match)
 	end,
 })
 
