@@ -19,6 +19,7 @@ A small, dependency-light Neovim configuration built around five native packages
 - Optional: `fd` as another file-search backend
 - A [Nerd Font](https://www.nerdfonts.com/) for mini.icons glyphs
 - Language servers on `PATH` for the filetypes you edit (enabled servers are listed in the [nvim-lspconfig](#nvim-lspconfig) section)
+- The [tree-sitter](https://github.com/tree-sitter/tree-sitter) CLI and a C compiler to install the Tree-sitter parsers (see step 3)
 
 On Arch Linux:
 
@@ -53,9 +54,17 @@ git clone https://github.com/MeanderingProgrammer/render-markdown.nvim \
 # Temporary: this module is not in any stable mini.nvim release yet (see the note below)
 git clone https://github.com/nvim-mini/mini.statuscolumn \
   ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn
+
+# 3. Tree-sitter parsers
+sudo pacman -S --needed tree-sitter-cli tree-sitter-bash tree-sitter-c \
+  tree-sitter-lua tree-sitter-markdown tree-sitter-query \
+  tree-sitter-vim tree-sitter-vimdoc
+tools/install-treesitter-parsers.sh
 ```
 
-Start Neovim. There is no install or compile command to run.
+Step 3 needs the tree-sitter CLI and a C compiler. The script links the grammars from the Arch packages when they are installed, builds any grammar that is missing (including `diff`, `go`, `html`, and `luadoc`), and skips work that is already done, so it is safe to re-run. Neovim's runtime already ships queries for the parsers it bundles; the script vendors the rest (`bash`, `diff`, `go`, `html`, `html_tags`, and `luadoc`).
+
+Start Neovim. Everything except the Tree-sitter parsers is plain Lua, so the script in step 3 is the only build step.
 
 > [!IMPORTANT]
 > **`mini.statuscolumn` is a standalone clone, and it must go as soon as it is redundant.** The module is not in any stable mini.nvim release — the newest tag, v0.18.0, does not ship it; only the beta `main` branch does — so a separate repository is the only way to add it without moving every other module onto beta code.
