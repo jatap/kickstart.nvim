@@ -216,7 +216,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Syntax highlighting using the parsers already installed in
 -- ~/.local/share/nvim/site/parser (builtin, no plugin needed).
 vim.api.nvim_create_autocmd("FileType", {
-	pattern = { "bash", "sh", "c", "diff", "html", "lua", "luadoc", "markdown", "query", "vim", "vimdoc", "help" },
+	pattern = { "bash", "sh", "c", "diff", "go", "html", "lua", "luadoc", "markdown", "query", "vim", "vimdoc", "help" },
 	callback = function(args)
 		local language = vim.treesitter.language.get_lang(args.match)
 		if not language or not vim.treesitter.language.add(language) then
@@ -269,6 +269,22 @@ else
 		vim.log.levels.WARN
 	)
 end
+
+-- [[ Format on save (Go) ]]
+-- Emacs runs gofmt through apheleia on every Go buffer; this is the Neovim
+-- equivalent. gopls formats with the standard gofmt rules, keeping the
+-- tool-default style that this config follows elsewhere. Buffers with no
+-- formatting client (for example a Go file outside any module) are left alone.
+vim.api.nvim_create_autocmd("BufWritePre", {
+	pattern = { "*.go", "go.mod", "go.work" },
+	callback = function(args)
+		local clients = vim.lsp.get_clients({ bufnr = args.buf, method = "textDocument/formatting" })
+		if #clients == 0 then
+			return
+		end
+		vim.lsp.buf.format({ bufnr = args.buf, async = false })
+	end,
+})
 
 -- Color helpers shared by the Modus on_highlights hook and the listchar
 -- dimming below. blend(fore, back, t): t = 0 keeps `fore`, t = 1 returns
