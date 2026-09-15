@@ -118,7 +118,7 @@ Borders, alignment indicators, and padded cells:
 - Autolink in angle brackets: <https://neovim.io>
 - Email autolink: <someone@example.com>
 - Image, rendered with the image icon: ![demo screenshot](screenshot.png)
-- Wiki link: [[some-page]]
+- Wiki link: [[README]]
 - Footnote reference, superscripted: see the footnote[^1]
 
 [^1]: The footnote body, rendered inline.
