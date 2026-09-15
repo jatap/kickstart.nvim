@@ -1,6 +1,6 @@
 # Neovim configuration
 
-A small, dependency-light Neovim configuration built around five native packages: the Modus colorscheme, mini.nvim, mini.statuscolumn, nvim-lspconfig, and render-markdown.nvim. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
+A small, dependency-light Neovim configuration built around six native packages: the Modus colorscheme, mini.nvim, mini.statuscolumn, nvim-lspconfig, render-markdown.nvim, and pi-agent.nvim. Everything lives in `init.lua`, there is no plugin manager, and packages load automatically from Vim's native `pack/*/start` directories.
 
 ## Approach
 
@@ -20,6 +20,7 @@ A small, dependency-light Neovim configuration built around five native packages
 - A [Nerd Font](https://www.nerdfonts.com/) for mini.icons glyphs
 - Language servers on `PATH` for the filetypes you edit (enabled servers are listed in the [nvim-lspconfig](#nvim-lspconfig) section)
 - The [tree-sitter](https://github.com/tree-sitter/tree-sitter) CLI and a C compiler to install the Tree-sitter parsers (see step 3)
+- [pi](https://pi.dev/) on `PATH` for the pi-agent.nvim mappings
 
 On Arch Linux:
 
@@ -38,6 +39,7 @@ mkdir -p ~/.local/share/nvim/site/pack/theme/start
 mkdir -p ~/.local/share/nvim/site/pack/ui/start
 mkdir -p ~/.local/share/nvim/site/pack/lsp/start
 mkdir -p ~/.local/share/nvim/site/pack/markdown/start
+mkdir -p ~/.local/share/nvim/site/pack/agent/start
 
 git clone https://github.com/miikanissi/modus-themes.nvim \
   ~/.local/share/nvim/site/pack/theme/start/modus-themes.nvim
@@ -50,6 +52,9 @@ git clone https://github.com/neovim/nvim-lspconfig \
 
 git clone https://github.com/MeanderingProgrammer/render-markdown.nvim \
   ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim
+
+git clone https://github.com/Run1e/pi-agent.nvim \
+  ~/.local/share/nvim/site/pack/agent/start/pi-agent.nvim
 
 # Temporary: this module is not in any stable mini.nvim release yet (see the note below)
 git clone https://github.com/nvim-mini/mini.statuscolumn \
@@ -84,36 +89,37 @@ Start Neovim. Everything except the Tree-sitter parsers is plain Lua, so the scr
 
 ## Installed packages and modules
 
-| Package or module      | Role                                                                          |
-| ---------------------- | ----------------------------------------------------------------------------- |
-| `modus-themes.nvim`    | Automatic light/dark Modus theme with inactive-window dimming                 |
-| `mini.ai`              | Extended `a`/`i` text objects                                                 |
-| `mini.animate`         | Cursor, scroll, resize, and window animations                                 |
-| `mini.basics`          | Common option defaults, option toggles, terminal setup, and yank highlighting |
-| `mini.bracketed`       | Consistent previous/next navigation with `[` and `]`                          |
-| `mini.bufremove`       | Delete buffers without destroying the window layout                           |
-| `mini.clue`            | Discoverable key-prefix popup                                                 |
-| `mini.cmdline`         | Command-line completion, range preview, and externalized UI                   |
-| `mini.comment`         | Comment operators and text objects                                            |
-| `mini.completion`      | Two-stage LSP and fallback insert completion                                  |
-| `mini.cursorword`      | Highlight the word under the cursor                                           |
-| `mini.diff`            | Git-index hunks, hunk operators, and hunk navigation                          |
-| `mini.files`           | Editable, floating file explorer                                              |
-| `mini.git`             | Git metadata, `:Git`, and context-aware Git inspection                        |
-| `mini.icons`           | Filetype, file, and LSP-kind icons                                            |
-| `mini.indentscope`     | Active indentation scope and scope text objects                               |
-| `mini.jump`            | Repeatable `f`/`F`/`t`/`T` motions                                            |
-| `mini.jump2d`          | Label-based jump to visible text                                              |
-| `mini.operators`       | Evaluate, exchange, multiply, replace, and sort operators                     |
-| `mini.pairs`           | Automatic bracket and quote pairs                                             |
-| `mini.pick`            | Files, grep, buffers, help, and extensible pickers                            |
-| `mini.splitjoin`       | Split or join bracketed argument lists                                        |
-| `mini.statuscolumn`    | Fold, number, and sign column with a separator (standalone clone, see note)   |
-| `mini.statusline`      | Statusline with diagnostics, Git, diff, and file information                  |
-| `mini.surround`        | Add, delete, find, highlight, and replace surroundings                        |
-| `mini.extra`           | Bundled support pickers used by the mini.pick workflows                       |
-| `nvim-lspconfig`       | LSP server configurations for the native Neovim LSP client                    |
-| `render-markdown.nvim` | Rendered Markdown view: headings, code blocks, tables, checkboxes, callouts   |
+| Package or module      | Role                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `modus-themes.nvim`    | Automatic light/dark Modus theme with inactive-window dimming                      |
+| `mini.ai`              | Extended `a`/`i` text objects                                                      |
+| `mini.animate`         | Cursor, scroll, resize, and window animations                                      |
+| `mini.basics`          | Common option defaults, option toggles, terminal setup, and yank highlighting      |
+| `mini.bracketed`       | Consistent previous/next navigation with `[` and `]`                               |
+| `mini.bufremove`       | Delete buffers without destroying the window layout                                |
+| `mini.clue`            | Discoverable key-prefix popup                                                      |
+| `mini.cmdline`         | Command-line completion, range preview, and externalized UI                        |
+| `mini.comment`         | Comment operators and text objects                                                 |
+| `mini.completion`      | Two-stage LSP and fallback insert completion                                       |
+| `mini.cursorword`      | Highlight the word under the cursor                                                |
+| `mini.diff`            | Git-index hunks, hunk operators, and hunk navigation                               |
+| `mini.files`           | Editable, floating file explorer                                                   |
+| `mini.git`             | Git metadata, `:Git`, and context-aware Git inspection                             |
+| `mini.icons`           | Filetype, file, and LSP-kind icons                                                 |
+| `mini.indentscope`     | Active indentation scope and scope text objects                                    |
+| `mini.jump`            | Repeatable `f`/`F`/`t`/`T` motions                                                 |
+| `mini.jump2d`          | Label-based jump to visible text                                                   |
+| `mini.operators`       | Evaluate, exchange, multiply, replace, and sort operators                          |
+| `mini.pairs`           | Automatic bracket and quote pairs                                                  |
+| `mini.pick`            | Files, grep, buffers, help, and extensible pickers                                 |
+| `mini.splitjoin`       | Split or join bracketed argument lists                                             |
+| `mini.statuscolumn`    | Fold, number, and sign column with a separator (standalone clone, see note)        |
+| `mini.statusline`      | Statusline with diagnostics, Git, diff, and file information                       |
+| `mini.surround`        | Add, delete, find, highlight, and replace surroundings                             |
+| `mini.extra`           | Bundled support pickers used by the mini.pick workflows                            |
+| `nvim-lspconfig`       | LSP server configurations for the native Neovim LSP client                         |
+| `pi-agent.nvim`        | pi agent in a split or herdr tab, with context paste and quickfix/diagnostic tools |
+| `render-markdown.nvim` | Rendered Markdown view: headings, code blocks, tables, checkboxes, callouts        |
 
 ## Keymap quick reference
 
@@ -144,7 +150,7 @@ Window cycling maps to Vim's own `<C-W>w` and `<C-W>W` motions, which visit ever
 > [!NOTE]
 > **`<C-X>` becomes a mapping prefix.** On its own it is Vim's decrement-number operator, and in Normal mode it now waits `'timeoutlen'` (300 ms here) for a possible second key before decrementing. Lower `'timeoutlen'`, or move the pair under another prefix, if you decrement numbers by keyboard often.
 >
-> **Normal mode only.** Insert-mode `<C-X>` completion keeps working unchanged, but inside a `:terminal` the keys reach the program. To hop out of a terminal into the next window, add `vim.keymap.set("t", "<C-X>o", [[<C-\><C-n><C-W>w]], { desc = "Next window" })`.
+> **Normal mode only.** Insert-mode `<C-X>` completion keeps working unchanged, but inside a `:terminal` the keys reach the program. To hop out of a terminal into the next window, press `<Esc><Esc>` to leave terminal mode, then an arrow or `<C-X>o`.
 
 ### mini.pick
 
@@ -199,9 +205,27 @@ Built-in keymaps that activate when a language server attaches to the buffer (se
 
 Useful commands: `:checkhealth vim.lsp` (also `:LspInfo`) for attachment status, `:lsp restart` to restart servers, and `:LspLog` for server logs.
 
+### Agent (pi-agent.nvim)
+
+Mappings exist whenever pi-agent.nvim is installed. They only do something after `<leader>as` has started a pi session; before that, every paste map reports that pi is not connected.
+
+| Key          | Action                                              |
+| ------------ | --------------------------------------------------- |
+| `<leader>as` | Start pi, or focus it if it is already running      |
+| `<leader>af` | Focus the pi window or herdr tab                    |
+| `<leader>ac` | Close the pi window or herdr tab                    |
+| `<leader>al` | Append the cursor line location to the pi prompt    |
+| `<leader>ar` | Append the selected range location to the pi prompt |
+| `<leader>ap` | Append the selected lines as a fenced code block    |
+| `<leader>aq` | Append the quickfix list to the pi prompt           |
+
+The three location and content maps work in Normal and Visual mode. In Visual mode, `<leader>ar` and `<leader>ap` describe the selected range; in Normal mode they describe the single cursor line.
+
+pi runs in a Neovim split. That split is a terminal, so its keys reach pi until you leave terminal mode: press `<Esc><Esc>` to exit, then an arrow or `<C-X>o` to move to another window. `<leader>af` returns to pi, and `auto_insert_on_focus` re-enters insert, so typing reaches pi immediately.
+
 ## Plugin playbook
 
-A per-module reference for everything configured in `init.lua`. Each section shows the exact **Configuration** the config uses and the essential **How to use** keys. All modules come from five native packages — `modus-themes.nvim`, `mini.nvim`, `mini.statuscolumn`, `nvim-lspconfig`, and `render-markdown.nvim` (see Installation); if a package is missing, the config warns and skips only the affected modules instead of failing to start.
+A per-module reference for everything configured in `init.lua`. Each section shows the exact **Configuration** the config uses and the essential **How to use** keys. All modules come from six native packages — `modus-themes.nvim`, `mini.nvim`, `mini.statuscolumn`, `nvim-lspconfig`, `render-markdown.nvim`, and `pi-agent.nvim` (see Installation); if a package is missing, the config warns and skips only the affected modules instead of failing to start.
 
 For every option, run `:help <Module>` — for example `:help MiniPick`, `:help MiniFiles`, or `:help mini.nvim`.
 
@@ -823,6 +847,33 @@ It reuses what this setup already has: the treesitter `markdown`, `markdown_inli
 - Health and requirements: `:checkhealth render-markdown`; full reference: `:help render-markdown`.
 - `tools/render-markdown-demo.md` exercises every rendered component — open it to see the setup working.
 
+### pi-agent.nvim
+
+Runs the [pi](https://pi.dev/) agent harness next to Neovim and links the two over a local socket. The link is two-way: the mappings push context into the current pi prompt, and pi gains tools that read and edit Neovim state. The plugin passes its bundled pi extension to the process it starts, so pi needs no separate setup.
+
+**Configuration**
+
+```lua
+-- Always the Neovim split: same workflow inside and outside herdr.
+local pi = require("pi-agent")
+pi.setup({ surface = pi.get_surface("nvim") })
+```
+
+The plugin defaults stay: the binary is `pi`, the surface takes focus on open, a disconnect leaves the window open, and every tool is on. The `nvim` surface defaults also stay: a right-side split at 40% width, and automatic insert mode whenever the pi window takes focus. The plugin also ships `herdr` and `tmux` surfaces; swap the name in `get_surface` to send pi to a separate multiplexer tab instead.
+
+**Tools**
+
+pi can read and write the quickfix list, and read LSP diagnostics. Ask for example "put every issue from the last commit into my quickfix list" or "get my Lua diagnostics", and the result lands in Neovim.
+
+**How to use**
+
+- `<leader>as` starts pi if it is not running, and focuses it if it is.
+- `<leader>al`, `<leader>ar`, and `<leader>ap` append the cursor location, the selection range, or the selection contents to the current pi prompt. They work in Normal and Visual mode.
+- `<leader>aq` appends the quickfix list. It pairs with the `nvim_set_qflist` tool: ask pi to fill the list, then paste it into the next message.
+- `<Esc><Esc>` leaves the pi window's terminal mode, then an arrow or `<C-X>o` moves to another window. `<leader>af` returns to pi.
+- Pi events can run Neovim code with `pi.on("agent_settled", function() ... end)`; the plugin README lists the events.
+- The plugin ships no `:help` file, so its [README](https://github.com/Run1e/pi-agent.nvim) is the reference.
+
 ## Core behavior
 
 - Absolute line numbers, sign column, and cursor line, drawn through `mini.statuscolumn`; mouse and delayed system clipboard integration
@@ -853,6 +904,7 @@ git -C ~/.local/share/nvim/site/pack/ui/start/mini.nvim pull
 git -C ~/.local/share/nvim/site/pack/ui/start/mini.statuscolumn pull
 git -C ~/.local/share/nvim/site/pack/lsp/start/nvim-lspconfig pull
 git -C ~/.local/share/nvim/site/pack/markdown/start/render-markdown.nvim pull
+git -C ~/.local/share/nvim/site/pack/agent/start/pi-agent.nvim pull
 ```
 
 After pulling `mini.nvim`, check whether it finally ships `mini.statuscolumn` and drop the standalone clone if it does (see the [installation note](#installation-on-a-new-machine)); the clone tracks the beta branch, so it also needs its own pulls until then.

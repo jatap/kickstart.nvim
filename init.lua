@@ -698,6 +698,48 @@ else
 	)
 end
 
+-- [[ Agent: pi-agent.nvim ]]
+-- Bridges Neovim and the pi agent harness. A local socket pairs a pi session
+-- with this Neovim instance, so mapped keys can push context (cursor position,
+-- selection, quickfix list) into the pi prompt, and pi gains tools to read and
+-- write the quickfix list and to read LSP diagnostics. The plugin bundles its
+-- own pi extension and passes it with `pi -e`, so pi needs no extra config.
+-- Native package:
+--
+--   git clone https://github.com/Run1e/pi-agent.nvim \
+--     ~/.local/share/nvim/site/pack/agent/start/pi-agent.nvim
+--
+-- Surface is always the Neovim split, so pi behaves the same inside and outside
+-- herdr and sits beside the code it edits. `<C-X>o` leaves the pi window and
+-- `<leader>af` returns. The herdr and tmux surfaces stay available through
+-- `pi.get_surface` if a separate tab is wanted later.
+local ok_piagent, pi = pcall(require, "pi-agent")
+if ok_piagent then
+	pi.setup({ surface = pi.get_surface("nvim") })
+
+	-- `<leader>a` group. Descriptions feed mini.clue, so the group popup lists
+	-- them after <Space>. The paste maps accept a range in Visual mode and a
+	-- single line in Normal mode; each appends to the current pi prompt.
+	vim.keymap.set("n", "<leader>as", pi.start, { desc = "[A]gent [S]tart or focus pi" })
+	vim.keymap.set("n", "<leader>af", pi.focus, { desc = "[A]gent [F]ocus the pi window" })
+	vim.keymap.set("n", "<leader>ac", pi.close, { desc = "[A]gent [C]lose the pi window" })
+	vim.keymap.set({ "n", "x" }, "<leader>al", pi.paste_cursor_location, {
+		desc = "[A]gent paste [L]ine location",
+	})
+	vim.keymap.set({ "n", "x" }, "<leader>ar", pi.paste_selection_location, {
+		desc = "[A]gent paste [R]ange location",
+	})
+	vim.keymap.set({ "n", "x" }, "<leader>ap", pi.paste_selection_contents, {
+		desc = "[A]gent [P]aste selection contents",
+	})
+	vim.keymap.set("n", "<leader>aq", pi.paste_qflist, { desc = "[A]gent paste [Q]uickfix list" })
+else
+	vim.notify(
+		"pi-agent.nvim not found. Install it with:\n  git clone https://github.com/Run1e/pi-agent.nvim ~/.local/share/nvim/site/pack/agent/start/pi-agent.nvim",
+		vim.log.levels.WARN
+	)
+end
+
 -- [[ Key clues: mini.clue ]]
 -- mini.clue reads descriptions from existing mappings and adds clues for
 -- common built-in key prefixes without creating a separate mapping catalog.
@@ -756,6 +798,7 @@ if ok_miniclue then
 			{ mode = "n", keys = "<C-w>" },
 		},
 		clues = {
+			leader_group("<leader>a", "Agent"),
 			leader_group("<leader>b", "Buffers"),
 			leader_group("<leader>d", "Diagnostics"),
 			leader_group("<leader>g", "Git"),
