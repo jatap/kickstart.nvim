@@ -371,6 +371,27 @@ if ok then
 			-- outline visible on both styles. MiniIndentscopeSymbolOff links here by
 			-- default, so misaligned scopes render with the same tone.
 			h.MiniIndentscopeSymbol = { fg = blend(hex_to_nr(c.fg_dim), hex_to_nr(c.bg_main), 0.5) }
+
+			-- Statusline: flat bar. The theme paints every mode as a solid filled
+			-- band, which puts two large color blocks on one line. Here the whole bar
+			-- keeps the status-line background and the mode is marked by colored bold
+			-- text instead; the right-most segment (search count and ruler) picks up
+			-- that same mode color through mini's default layout. Deliberate override
+			-- of the theme's MiniStatuslineMode* groups, but every value is still a
+			-- Modus palette token, so the bar follows light/dark reloads.
+			do
+				local bar = c.bg_status_line_active
+				h.MiniStatuslineModeNormal = { fg = c.blue_faint, bg = bar, bold = true }
+				h.MiniStatuslineModeInsert = { fg = c.green_faint, bg = bar, bold = true }
+				h.MiniStatuslineModeVisual = { fg = c.magenta_faint, bg = bar, bold = true }
+				h.MiniStatuslineModeReplace = { fg = c.red_faint, bg = bar, bold = true }
+				h.MiniStatuslineModeCommand = { fg = c.yellow_faint, bg = bar, bold = true }
+				h.MiniStatuslineModeOther = { fg = c.cyan_faint, bg = bar, bold = true }
+				h.MiniStatuslineDevinfo = { fg = c.fg_dim, bg = bar }
+				h.MiniStatuslineFilename = { fg = c.fg_status_line_active, bg = bar, bold = true }
+				h.MiniStatuslineFileinfo = { fg = c.fg_dim, bg = bar }
+				h.MiniStatuslineInactive = { fg = c.fg_status_line_inactive, bg = c.bg_status_line_inactive }
+			end
 		end,
 	})
 

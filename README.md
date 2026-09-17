@@ -246,6 +246,8 @@ vim.cmd.colorscheme("modus")
 
 `init.lua` additionally dims the whitespace markers (`tab`, `trail`, `nbsp`) toward the background to a subtle theme-derived tone, re-applied whenever the theme reloads or switches light/dark.
 
+It also overrides the `MiniStatusline*` groups for a flat statusline; see [mini.statusline](#ministatusline).
+
 **How to use**
 
 - Switch themes with `:set background=light` or `:set background=dark`; `style = "auto"` updates the colorscheme automatically.
@@ -749,6 +751,18 @@ require("mini.statusline").setup({ use_icons = true })
 **How to use**
 
 Shows filetype (with icon), mode, diagnostics, Git branch, diff hunks, filename, and line/column, truncated to fit the window width. Inactive windows get a dimmed variant automatically.
+
+**One deliberate deviation from the theme**
+
+Modus paints each mode as a solid filled band, which puts two large color blocks on one line. Through the theme's `on_highlights` hook, this config instead keeps one background (`bg_status_line_active`) across the whole bar and marks the mode with colored bold text.
+
+| Segment                                | Color                                              |
+| -------------------------------------- | -------------------------------------------------- |
+| Mode, search count, line/column        | the active mode's Modus accent as foreground, bold |
+| Filename                               | `fg_status_line_active`, bold                      |
+| Git, diff, diagnostics, LSP, file info | `fg_dim`                                           |
+
+Every value is a Modus palette token, so the bar still follows `:set background=light|dark`. Because the layout stays mini's default, the mode color appears on both the left chip and the right end.
 
 ### mini.surround
 
