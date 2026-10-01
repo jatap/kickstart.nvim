@@ -129,7 +129,7 @@ Leader is `<Space>`.
 
 | Key                        | Action                                                      |
 | -------------------------- | ----------------------------------------------------------- |
-| `<PageDown>` / `<PageUp>`  | Scroll half a page and center the cursor                    |
+| `<PageDown>` / `<PageUp>`  | Scroll half a page (cursor stays in place)                  |
 | `<C-Left>` / `<C-Right>`   | Focus the split to the left/right                           |
 | `<C-Down>` / `<C-Up>`      | Focus the split below/above                                 |
 | `<C-X>o` / `<C-X>O`        | Focus the next/previous window (quickfix, floats too)       |

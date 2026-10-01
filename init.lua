@@ -158,8 +158,8 @@ vim.keymap.set("n", "<leader>dq", vim.diagnostic.setloclist, { desc = "[D]iagnos
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Arrow-first movement and split navigation
-vim.keymap.set({ "n", "x" }, "<PageDown>", "<C-d>zz", { desc = "Scroll half-page down and center" })
-vim.keymap.set({ "n", "x" }, "<PageUp>", "<C-u>zz", { desc = "Scroll half-page up and center" })
+vim.keymap.set({ "n", "x" }, "<PageDown>", "<C-d>", { desc = "Scroll half-page down" })
+vim.keymap.set({ "n", "x" }, "<PageUp>", "<C-u>", { desc = "Scroll half-page up" })
 vim.keymap.set("n", "<C-Left>", "<C-w><Left>", { desc = "Move focus to the left window" })
 vim.keymap.set("n", "<C-Right>", "<C-w><Right>", { desc = "Move focus to the right window" })
 vim.keymap.set("n", "<C-Down>", "<C-w><Down>", { desc = "Move focus to the lower window" })
